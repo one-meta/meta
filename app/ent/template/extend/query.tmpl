@@ -1,0 +1,145 @@
+{{/* 下一行的作用是，告诉 Intellij/GoLand 等IDE，基于 gen.Graph 类型来启用自动补全功能。 */}}
+{{/* gotype: entgo.io/ent/entc/gen.Graph */}}
+
+{{/* 该模板用于增加Query和Search功能*/}}
+
+{{ define "extend_query" }}
+
+    {{/* 增加头 */}}
+    {{ $pkg := base $.Config.Package }}
+    {{ template "header" $ }}
+
+    import (
+    "strings"
+    )
+
+
+    {{/* 遍历节点 */}}
+    {{ range $n := $.Nodes }}
+
+
+        {{/* 增加Query功能 */}}
+        {{ $queryBuilder := $n.QueryName }}
+        {{ $receiver := receiver $queryBuilder }}
+
+
+        // Query{{ $n.Name }} 查询 {{ $n.Name }} 值
+        func ({{ $receiver }} *{{ $queryBuilder }}) QueryItem{{ $n.Name }}(input *{{ $n.Name }},  queryParam *entity.QueryParam, searchCount bool) *{{ $queryBuilder }} {
+        if !searchCount {
+        //排序
+        if strings.HasPrefix(queryParam.Order, "-") {
+        //降序
+        {{ $receiver }}.Order(Desc(strings.ReplaceAll(queryParam.Order, "-", "")))
+        } else {
+        //升序
+        {{ $receiver }}.Order(Asc(queryParam.Order))
+        }
+        {{ $receiver }}.Offset(queryParam.Current).Limit(queryParam.PageSize)
+        }
+        var andPredicate []predicate.{{ $n.Name }}
+        var orPredicate []predicate.{{ $n.Name }}
+        {{- range $f := $n.Fields }}
+            {{/* 时间 */}}
+            {{- if $f.IsTime }}
+                if !queryParam.{{ $f.StructField }}Gte.IsZero() && !queryParam.{{ $f.StructField }}Lte.IsZero(){
+                {{ $receiver }}.Where({{$n.Package}}.And({{$n.Package}}.{{ $f.StructField }}GTE(queryParam.{{ $f.StructField }}Gte), {{$n.Package}}.{{ $f.StructField }}LTE(queryParam.{{ $f.StructField }}Lte)))
+                }
+            {{end}}
+            {{/* 字符串 */}}
+            {{- if $f.IsString }}
+                {{- if $f.Nillable }}
+                    if input.{{ $f.StructField }} != nil{
+                    andPredicate = append(andPredicate, {{$n.Package}}.{{ $f.StructField }}ContainsFold(*input.{{ $f.StructField }}))
+                    }
+                {{else}}
+                    if input.{{ $f.StructField }} != ""{
+                    andPredicate = append(andPredicate, {{$n.Package}}.{{ $f.StructField }}ContainsFold(input.{{ $f.StructField }}))
+                    }
+                {{- end }}
+            {{end}}
+            {{/* 数字 */}}
+            {{- if and (ge $f.Type.Type 8)  ( le $f.Type.Type 20) }}
+                {{- if $f.Nillable }}
+                    if input.{{ $f.StructField }} != nil{
+                    andPredicate = append(andPredicate, {{$n.Package}}.{{ $f.StructField }}(*input.{{ $f.StructField }}))
+                    }
+                {{else}}
+                    if input.{{ $f.StructField }} != 0{
+                    andPredicate = append(andPredicate, {{$n.Package}}.{{ $f.StructField }}(input.{{ $f.StructField }}))
+                    }
+                {{- end }}
+            {{end}}
+
+            {{/* json格式，可以进行 or 搜索 */}}
+            {{- if $f.IsJSON }}
+                {{ $jsonValueType := "" }}
+                {{- if eq $f.Type.String "*[]string" }}
+                    {{ $jsonValueType = "StringContains" }}
+                {{end}}
+                {{- if eq $f.Type.String "*[]int"}}
+                    {{ $jsonValueType = "ValueContains" }}
+                {{end}}
+                {{- if ne $jsonValueType "" }}
+                    if input.{{ $f.StructField }} != nil{
+                    for _, i := range *input.{{ $f.StructField }} {
+                    j := i
+                    orPredicate = append(orPredicate,
+                    func(s *sql.Selector) {
+                    s.Where(sqljson.{{$jsonValueType}}({{$n.Package}}.Field{{ $f.StructField }}, j))
+                    })
+                    }
+                    }
+                {{end}}
+            {{end}}
+        {{- end }}
+        if len(andPredicate) != 0 {
+        {{ $receiver }}.Where({{$n.Package}}.And(andPredicate...))
+        }
+        if len(orPredicate) != 0 {
+        {{ $receiver }}.Where({{$n.Package}}.Or(orPredicate...))
+        }
+        return {{ $receiver }}
+        }
+
+
+        // Search{{ $n.Name }} 搜索 {{ $n.Name }} 值
+        func ({{ $receiver }} *{{ $queryBuilder }}) Search{{ $n.Name }}(input *{{ $n.Name }},  queryParam *entity.QueryParam, searchCount bool) *{{ $queryBuilder }} {
+        if !searchCount {
+        //排序
+        if strings.HasPrefix(queryParam.Order, "-") {
+        //降序
+        {{ $receiver }}.Order(Desc(strings.ReplaceAll(queryParam.Order, "-", "")))
+        } else {
+        //升序
+        {{ $receiver }}.Order(Asc(queryParam.Order))
+        }
+        {{ $receiver }}.Offset(queryParam.Current).Limit(queryParam.PageSize)
+        }
+
+        var orPredicate []predicate.{{ $n.Name }}
+        search := queryParam.Search
+        {{/* 时间 */}}
+        {{- range $f := $n.Fields }}
+            {{- if eq $f.Type.Type 2 }}
+                if !queryParam.{{ $f.StructField }}Gte.IsZero() && !queryParam.{{ $f.StructField }}Lte.IsZero(){
+                {{ $receiver }}.Where({{$n.Package}}.And({{$n.Package}}.{{ $f.StructField }}GTE(queryParam.{{ $f.StructField }}Gte), {{$n.Package}}.{{ $f.StructField }}LTE(queryParam.{{ $f.StructField }}Lte)))
+                }
+            {{end}}
+        {{- end }}
+
+        for _, v := range search {
+        {{- range $f := $n.Fields }}
+            {{/* 字符串 */}}
+            {{- if eq $f.Type.Type 7 }}
+                orPredicate = append(orPredicate, {{$n.Package}}.{{ $f.StructField }}ContainsFold(v))
+            {{end}}
+        {{- end }}
+        }
+        if len(orPredicate) != 0 {
+        {{ $receiver }}.Where({{$n.Package}}.Or(orPredicate...))
+        }
+        return {{ $receiver }}
+        }
+
+    {{ end }}
+{{ end }}

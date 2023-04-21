@@ -1,0 +1,49 @@
+{{/* 下一行的作用是，告诉 Intellij/GoLand 等IDE，基于 gen.Graph 类型来启用自动补全功能。 */}}
+{{/* gotype: entgo.io/ent/entc/gen.Graph */}}
+
+{{/* 该模板用于增加create的SetEntity功能
+ 1.不设置Id的值
+ 2.时间类型字段，如果为零值，则不设置对应的值
+ 3.schema中指定Nillable的字段，会被设置SetNillableEntity
+ 4.默认设置值
+ */}}
+
+{{ define "extend_create" }}
+
+    {{/* 增加头 */}}
+    {{ $pkg := base $.Config.Package }}
+    {{ template "header" $ }}
+
+    {{/* 遍历节点 */}}
+    {{ range $n := $.Nodes }}
+
+        {{/* 增加Create SetEntity功能 */}}
+        {{ $createBuilder := $n.CreateName }}
+        {{ $receiver := receiver $createBuilder }}
+        // Set{{ $n.Name }} 设置 {{ $n.Name }} 值
+        func ({{ $receiver }} *{{ $createBuilder }}) SetItem{{ $n.Name }}(input *{{ $n.Name }}) *{{ $createBuilder }} {
+        {{- range $f := $n.Fields }}
+            {{- /* 时间类型，判断是否零值，零值则不设置 */}}
+            {{- if eq $f.Type.Type 2 }}
+              if !input.{{ $f.StructField }}.IsZero(){
+              {{- $setter := print "Set" $f.StructField }}
+              {{ $receiver }}.{{ $setter }}(input.{{ $f.StructField }})
+              }
+            {{else}}
+                {{- /* 非时间类型 */}}
+                {{- /* 设置 Nillable 字段，Nillable字段可以包含零值 */}}
+                {{- if $f.Nillable }}
+                    {{- $setter := print "SetNillable" $f.StructField }}
+                    {{ $receiver }}.{{ $setter }}(input.{{ $f.StructField }})
+                {{else}}
+                    {{- /* 设置常规字段（必须，或者不可为空的，没有限制，零值也会被设置） */}}
+                    {{- $setter := print "Set" $f.StructField }}
+                    {{ $receiver }}.{{ $setter }}(input.{{ $f.StructField }})
+                {{- end }}
+            {{end}}
+
+        {{- end }}
+        return {{ $receiver }}
+        }
+    {{ end }}
+{{ end }}

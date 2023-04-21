@@ -1,0 +1,161 @@
+[stage]
+# "dev", 开发测试
+# "prod", 生产：优雅关闭
+status = "dev"
+# 默认sa用户（可前端登录）
+user = "meta"
+# 不指定密码，则首次启动时生成
+password = "meta_password"
+[stage.api]
+# 所有用户可读（GET）；完整路径
+publicGetPath = [
+    "/api/v1/user/info",
+    "/api/v1/tenant"
+]
+# 仅sa用户可以操作，如果在publicGetPathPrefix中，则所有可读
+# 路径前缀
+saPathPrefix = [
+    "/api/v1/systemapi",
+    "/api/v1/casbinrule",
+    "/api/v1/tenant",
+    "/api/v1/user",
+]
+
+[fiber]
+host = "meta_backend"
+port = 9001
+# 单位：秒
+readTimeout = 60
+# default ->  encoding/json
+# sonic   ->  bytedance/sonic
+# https://docs.gofiber.io/guide/faster-fiber
+jsonCoder = "sonic"
+# "UTC" => "UTC"
+# "Local" => Local
+timeLocation = "Local"
+
+[auth]
+# 启用认证和授权，仅stage.status=dev下对private路由生效
+enable = true
+# 认证
+[auth.jwt]
+# HS256, HS384, HS512
+hmac = "HS256"
+key = "meta_jwt_password"
+# 过期时间，单位：小时
+ttl = 168
+
+[auth.casbin]
+# casbin model.conf的路径
+modelPath = "resource"
+
+[ent]
+# sqlite3不支持修改数据库资源 see: https://entgo.io/zh/docs/dialects#sqlite
+# 自动迁移，只创建新表和索引，将列追加到表或扩展列类型。 例如，将int改为bigint。
+autoMigrate = true
+# 在调试模式，打印所有SQL查询
+debugMode = false
+# 删除资源，WithDropIndex 和 WithDropColumn 是用于删除表列和索引的两个选项。
+withDropIndex = true
+withDropColumn = true
+# 默认情况下，每个表的SQL主键从1开始；这意味着不同类型的多个实体可以有相同的ID
+# 如果想要全局唯一ID
+# 注意：全局唯一ID无法跟Versioned Migrations同时生效
+withGlobalUniqueID = false
+# 支持的数据库后端：mysql、mariadb、postgres、sqlite3
+# 需要在 [ent.db.xx] 配置启用的数据库信息
+backend = "postgres"
+
+#backend
+[ent.db]
+maxIdleConns = 10
+maxOpenConns = 100
+# Hour
+connMaxLifetime = 1
+
+[ent.db.postgres]
+host = "meta_postgres"
+port = 5432
+username = "meta"
+password = "meta_postgres_password"
+database = "meta"
+param = "sslmode=disable"
+
+[ent.db.mysql]
+host = "meta_mysql"
+port = 3306
+username = "meta"
+password = "meta_mysql_password"
+database = "meta"
+param = "parseTime=true&loc=Local"
+
+[ent.db.mariadb]
+host = "meta_mariadb"
+port = 55000
+username = "meta"
+password = "meta_mariadb_password"
+database = "meta"
+param = ""
+
+[ent.db.sqlite3]
+# memory，内存中
+# rwc，文件中
+mode = "rwc"
+database = "meta.db"
+
+#cache
+[cache.redis]
+host = "meta_redis"
+port = 6379
+username = ""
+password = "meta_redis_password"
+dbNum = 0
+
+#swagger api
+[swagger]
+enable = true
+
+# 日志
+# web(fiber)日志
+[log.web]
+# https://docs.gofiber.io/api/middleware/logger
+format = "[${time}] ${ip} ${pid} ${locals:requestid} ${status} - ${method} ${url} ${ua}\n"
+# https://programming.guide/go/format-parse-string-time-date-example.html
+timeFormat = "2006-01-02 15:04:05"
+timeZone = "Local"
+# 日志输出：stderr, lumberjack，开发可以stderr输出到终端，生产用lumberjack
+# k8s 也可以输出到stderr
+output = "stderr"
+# output = "lumberjack"
+[log.web.lumberjack]
+# 日志名称
+logFile = "data/logs/web/meta.log"
+# 日志大小限制，单位MB
+maxSize = 100
+# 历史日志文件保留天数，0:无限制
+maxAge = 0
+# 最大保留历史日志数量，0:无限制
+maxBackup = 0
+# 本地时区
+localTime = true
+# 压缩历史日志文件
+compress = true
+
+# 应用日志
+[log.app]
+# 1:debug，2:info，3:warn，4:error，5:dpanic，6:panic，7:fatal
+# debug包括info,warn...以此类推
+logLevel = 1
+[log.app.lumberjack]
+# 日志名称
+logFile = "data/logs/app/meta.log"
+# 日志大小限制，单位MB
+maxSize = 100
+# 历史日志文件保留天数，0:无限制
+maxAge = 0
+# 最大保留历史日志数量，0:无限制
+maxBackup = 0
+# 本地时区
+localTime = true
+# 压缩历史日志文件
+compress = true

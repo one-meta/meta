@@ -1,0 +1,11 @@
+FROM scratch
+
+WORKDIR /app
+
+COPY meta /app
+COPY resource/model.conf /app/resource/model.conf
+#COPY resource/config.toml /app/resource/config.toml
+COPY resource/config_test.toml /app/resource/config.toml
+
+ENTRYPOINT ["./meta"]
+EXPOSE 9001

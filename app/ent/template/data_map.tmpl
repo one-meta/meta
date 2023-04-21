@@ -1,0 +1,52 @@
+{{/* 下一行的作用是，告诉 Intellij/GoLand 等IDE，基于 gen.Graph 类型来启用自动补全功能。 */}}
+{{/* gotype: entgo.io/ent/entc/gen.Graph */}}
+
+{{/* 该模板用于增加data/data_map.go 功能*/}}
+
+{{ define "../../data/data_map" }}
+    {{/* 增加头 */}}
+    {{ $pkg := base $.Config.Package }}
+    {{ template "header" $ }}
+    {{ range $n := $.Nodes }}
+        {{/*      // data AssetIp=assetip*/}}
+        // data {{ $n.Name }}={{$n.Package}}
+
+        {{- range $f := $n.Fields }}
+
+            {{/*            不生成默认值的字段（不自动测试）*/}}
+            {{/*            {{- if  not $f.Default }}*/}}
+            {{/*                */}}{{/*          // field AssetIp,CreatedAt,0,time.Time,nillable*/}}
+            {{/*                // field {{ $n.Name }},{{$f.StructField}},{{$f.Column.Size}},{{$f.Type.Type}},{{$f.Nillable}}*/}}
+            {{/*            {{- end}}*/}}
+
+            {{/*            生成所有字段*/}}
+            // field {{ $n.Name }},{{$f.StructField}},{{$f.Column.Size}},{{$f.Type.Type}},{{$f.Nillable}}
+
+
+            {{/* 非时间 */}}
+            {{- if ne $f.Type.Type 2 }}
+                {{- if $f.Default }}
+                    {{/* 字符串默认值 */}}
+                    {{- if eq $f.Type.Type 7 }}
+                        {{/*                      // default Group,Name:"Unknown"*/}}
+                        // default {{ $n.Name }},{{$f.StructField}}:"{{$f.DefaultValue}}"
+                    {{else}}
+                        {{/* 非字符串默认值 */}}
+                        {{/*                        // default User,Valid:true*/}}
+                        // default {{ $n.Name }},{{$f.StructField}}:{{$f.DefaultValue}}
+                    {{end}}
+
+                {{- end }}
+            {{end}}
+        {{- end }}
+
+        {{/*        把所有时间字段的放进来，由generator去重，生成时间*/}}
+        {{- range $f := $n.Fields }}
+            {{- /* 时间类型*/}}
+            {{- if eq $f.Type.Type 2 }}
+                // time {{$f.StructField}}
+            {{end}}
+
+        {{- end }}
+    {{ end }}
+{{ end }}

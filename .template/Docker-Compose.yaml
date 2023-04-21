@@ -1,0 +1,74 @@
+services:
+  backend:
+    build:
+      context: .
+    container_name: meta_backend
+    restart: always
+    depends_on:
+      #      - "mysql"
+      - "postgres"
+      - "redis"
+    networks:
+      - meta-network
+    ports:
+      # 宿主:容器
+      - "9001:9001"
+
+  #  mysql:
+  #    image: mysql/mysql-server
+  #    container_name: meta_mysql
+  #    restart: always
+  #    networks:
+  #      - meta-network
+  #    ports:
+  #      - 3306:3306
+  #    environment:
+  #      TZ: Asia/Shanghai
+  #      MYSQL_ROOT_PASSWORD: meta_mysql_root_password
+  #      #自动创建数据库
+  #      MYSQL_DATABASE: meta
+  #      MYSQL_USER: meta
+  #      MYSQL_PASSWORD: meta_mysql_password
+  #    volumes:
+  #      - ./data/mysql:/var/lib/mysql
+  #    healthcheck:
+  #      test: mysqladmin ping -h localhost -u meta --password=meta_mysql_password
+
+  postgres:
+    image: postgres:alpine
+    container_name: meta_postgres
+    restart: always
+    environment:
+      #自动创建数据库
+      POSTGRES_DB: meta
+      POSTGRES_USER: meta
+      POSTGRES_PASSWORD: meta_postgres_password
+      PGDATA: /data/postgres
+    volumes:
+      - ./data/postgres:/data/postgres
+    ports:
+      - 5432:5432
+    networks:
+      - meta-network
+
+  redis:
+    image: redis:alpine
+    container_name: meta_redis
+    restart: always
+    networks:
+      - meta-network
+    ports:
+      - 6379:6379
+    volumes:
+      - ./data/redis:/data
+    environment:
+      TZ: Asia/Shanghai
+    healthcheck:
+      test: redis-cli ping
+    command: --requirepass meta_redis_password
+
+
+networks:
+  meta-network:
+    driver: bridge
+    name: meta-network
