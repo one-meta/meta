@@ -5,12 +5,23 @@ tmp_dir = "tmp"
 
 [build]
 args_bin = []
+
+# Mac or linux only.
 bin = "./tmp/meta"
 cmd = "meta-g && go mod tidy && cp -rf resource ./tmp && wire ./app && swag init && go build -o ./tmp/meta ."
+exclude_dir = ["tmp", "docs", "data", "app/ent"]
+exclude_file = ["app/wire_gen.go"]
+# Mac or linux only end.
+
+# Windows only.
+# bin = "./tmp/meta.exe"
+# cmd = "meta-g.exe && go mod tidy && xcopy resource tmp\\resource /y /e /i /q && wire.exe ./app && swag.exe init && go build -o ./tmp/meta.exe ."
+# exclude_dir = ["tmp", "docs", "data", "app\\ent"]
+# exclude_file = ["app\\wire_gen.go"]
+# Windows only end.
+
 # It's not necessary to trigger build each time file changes if it's too frequent.
 delay = 3000 # ms
-exclude_dir = ["assets", "tmp", "vendor", "testdata", "docs", "data", "app/ent/extend"]
-exclude_file = ["app/wire_gen.go"]
 exclude_regex = ["_test.go"]
 exclude_unchanged = false
 follow_symlink = false
