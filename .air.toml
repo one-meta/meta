@@ -6,7 +6,7 @@ tmp_dir = "tmp"
 [build]
 args_bin = []
 bin = "./tmp/meta"
-cmd = "meta-g && go mod tidy && mkdir -p data/logs/web && cp -rf resource ./tmp && wire ./app && swag init && go build -o ./tmp/meta ."
+cmd = "meta-g && go mod tidy && cp -rf resource ./tmp && wire ./app && swag init && go build -o ./tmp/meta ."
 # It's not necessary to trigger build each time file changes if it's too frequent.
 delay = 3000 # ms
 exclude_dir = ["assets", "tmp", "vendor", "testdata", "docs", "data", "app/ent/extend"]
