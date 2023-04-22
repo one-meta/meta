@@ -41,7 +41,7 @@
 
 [Go Fiber](https://gofiber.io/)：Web 框架、[Entgo](https://entgo.io/zh)：ORM、[viper](https://github.com/spf13/viper)：配置文件、[Casbin](https://casbin.org/zh/) ：RABC、[JWT](https://github.com/golang-jwt/jwt)、[uber zap 日志记录](https://github.com/uber-go/zap)、[lumberjack 日志轮转](https://github.com/natefinch/lumberjack)、[google Wire](https://github.com/google/wire)：依赖注入、[gg](https://github.com/Xuanwo/gg)：go 代码生成、[swagger api](https://github.com/swaggo/swag)、[air](https://github.com/cosmtrek/air)：go 程序热重启、[gocron](github.com/go-co-op/gocron)定时任务。
 
-## 用法步骤【建议参考 meta wiki】
+## 用法步骤【建议参考 [meta wiki](https://github.com/one-meta/meta/wiki/)】
 
 1. ent 创建模块，ent 同目录执行（app 目录执行）
    `go run entgo.io/ent/cmd/ent new <moduleName>`
