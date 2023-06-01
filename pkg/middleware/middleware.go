@@ -15,7 +15,7 @@ import (
 )
 
 // Middleware provide Fiber's built-in middlewares.
-// See: https://docs.gofiber.io/api/middleware
+// See: https://docs.gofiber.io/category/-middleware
 func Middleware(m *fiber.App) {
 	logConfig := GetWebLogConfig()
 	m.Use(
@@ -26,15 +26,15 @@ func Middleware(m *fiber.App) {
 		),
 		requestid.New(),
 		compress.New(),
-		//本地测试，如果空指针导致panic，可以取消recover中间件，就能定位到具体位置了
+		// 本地测试，如果空指针导致panic，可以取消recover中间件，就能定位到具体位置了
 		recover.New(),
 	)
 }
 
 func GetWebLogConfig() *logger.Config {
 	logConfig := &logger.Config{}
-	var webConfig = config.CFG.Log.Web
-	var lumberConfig = config.CFG.Log.Web.Lumberjack
+	webConfig := config.CFG.Log.Web
+	lumberConfig := config.CFG.Log.Web.Lumberjack
 	if webConfig.Format != "" {
 		logConfig.Format = webConfig.Format
 	}
