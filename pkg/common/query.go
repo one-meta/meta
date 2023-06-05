@@ -17,11 +17,16 @@ func QueryParser(c *fiber.Ctx, pojo any) (*entity.QueryParam, error) {
 	if err != nil {
 		return nil, err
 	}
-	//排序字段转换
-	//createdAt => created_at
+	if qp.PageSize <= 0 {
+		qp.PageSize = 1
+	} else if qp.PageSize > 100 {
+		qp.PageSize = 100
+	}
+	// 排序字段转换
+	// createdAt => created_at
 	qp.Order = Snake(qp.Order)
 
-	//前端分页转换
+	// 前端分页转换
 	if qp.Current <= 1 {
 		qp.Current = 0
 	} else {
