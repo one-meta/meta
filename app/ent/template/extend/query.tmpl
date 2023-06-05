@@ -70,6 +70,15 @@
                 {{- end }}
             {{end}}
 
+            {{/* bool */}}
+            {{- if $f.IsBool }}
+                {{- if $f.Nillable }}
+                    if input.{{ $f.StructField }} != nil{
+                    andPredicate = append(andPredicate, {{$n.Package}}.{{ $f.StructField }}(*input.{{ $f.StructField }}))
+                    }
+                {{- end }}
+            {{end}}
+
             {{/* json格式，可以进行 or 搜索 */}}
             {{- if $f.IsJSON }}
                 {{ $jsonValueType := "" }}
