@@ -8,7 +8,7 @@ args_bin = []
 
 # Mac or linux only.
 bin = "./tmp/meta"
-cmd = "meta-g && go mod tidy && cp -rf resource ./tmp && wire ./app && swag init && go build -o ./tmp/meta ."
+cmd = "swag init && meta-g && go mod tidy && cp -rf resource ./tmp && wire ./app && go build -o ./tmp/meta ."
 exclude_dir = ["tmp", "docs", "data", "app/ent"]
 exclude_file = ["app/wire_gen.go"]
 # Mac or linux only end.
